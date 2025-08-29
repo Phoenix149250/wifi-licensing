@@ -1,17 +1,13 @@
 import os, sqlite3, secrets
 from datetime import datetime, timedelta, timezone, date
-from fastapi import FastAPI, Request, Form, Depends, HTTPException
+from fastapi import FastAPI, Request, Form, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
 # Load .env values if available
 load_dotenv()
-
-ADMIN_USER = os.getenv("ADMIN_USER", "admin")
-ADMIN_PASS = os.getenv("ADMIN_PASS", "adminpass")
 
 # Render provides its own domain; fallback to localhost for dev
 HOST_URL = os.getenv("RENDER_EXTERNAL_URL", "http://127.0.0.1:8000")
@@ -20,7 +16,6 @@ DB_PATH = "db.sqlite"
 
 app = FastAPI(title="WiFiBot Licensing")
 templates = Jinja2Templates(directory="templates")
-security = HTTPBasic()
 
 # CORS setup (allow API calls from anywhere)
 app.add_middleware(
@@ -50,16 +45,6 @@ def init_db():
     )""")
     con.commit(); con.close()
 init_db()
-
-# ---------------- Authentication ----------------
-def admin(creds: HTTPBasicCredentials = Depends(security)):
-    ok = (
-        secrets.compare_digest(creds.username, ADMIN_USER)
-        and secrets.compare_digest(creds.password, ADMIN_PASS)
-    )
-    if not ok:
-        raise HTTPException(401, "Unauthorized", headers={"WWW-Authenticate": "Basic"})
-    return creds.username
 
 # ---------------- Student JSON API ----------------
 @app.post("/api/request-activation")
@@ -104,7 +89,7 @@ def request_form(request: Request):
 
 # ---------------- Admin Panel ----------------
 @app.get("/admin", response_class=HTMLResponse)
-def admin_page(request: Request, user: str = Depends(admin)):
+def admin_page(request: Request):
     con = db(); cur = con.cursor()
     cur.execute("SELECT * FROM activation_requests ORDER BY created_at DESC")
     reqs = cur.fetchall()
@@ -117,7 +102,7 @@ def admin_page(request: Request, user: str = Depends(admin)):
     )
 
 @app.post("/admin/approve")
-def approve(req_id: int = Form(...), days: int = Form(30), user: str = Depends(admin)):
+def approve(req_id: int = Form(...), days: int = Form(30)):
     con = db(); cur = con.cursor()
     cur.execute("SELECT * FROM activation_requests WHERE id=?", (req_id,))
     r = cur.fetchone()
@@ -135,14 +120,14 @@ def approve(req_id: int = Form(...), days: int = Form(30), user: str = Depends(a
     return RedirectResponse("/admin", status_code=303)
 
 @app.post("/admin/reject")
-def reject(req_id: int = Form(...), user: str = Depends(admin)):
+def reject(req_id: int = Form(...)):
     con = db(); cur = con.cursor()
     cur.execute("UPDATE activation_requests SET status=?, admin_note=? WHERE id=?", ("rejected", "Rejected", req_id))
     con.commit(); con.close()
     return RedirectResponse("/admin", status_code=303)
 
 @app.post("/admin/extend")
-def extend(student_id: str = Form(...), days: int = Form(30), user: str = Depends(admin)):
+def extend(student_id: str = Form(...), days: int = Form(30)):
     con = db(); cur = con.cursor()
     cur.execute("SELECT * FROM licenses WHERE student_id=?", (student_id,))
     row = cur.fetchone()
@@ -155,7 +140,7 @@ def extend(student_id: str = Form(...), days: int = Form(30), user: str = Depend
     return RedirectResponse("/admin", status_code=303)
 
 @app.post("/admin/revoke")
-def revoke(student_id: str = Form(...), user: str = Depends(admin)):
+def revoke(student_id: str = Form(...)):
     con = db(); cur = con.cursor()
     cur.execute("DELETE FROM licenses WHERE student_id=?", (student_id,))
     con.commit(); con.close()
