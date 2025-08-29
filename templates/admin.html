@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head><title>Admin Panel</title></head>
+<body>
+  <h1>Activation Requests</h1>
+  {% for r in requests %}
+    <div>
+      <b>{{ r.student_id }}</b> - {{ r.hwid }} - {{ r.status }}
+      <form method="post" action="/admin/approve">
+        <input type="hidden" name="req_id" value="{{ r.id }}">
+        <input type="number" name="days" value="30">
+        <button type="submit">Approve</button>
+      </form>
+      <form method="post" action="/admin/reject">
+        <input type="hidden" name="req_id" value="{{ r.id }}">
+        <button type="submit">Reject</button>
+      </form>
+    </div>
+  {% endfor %}
+
+  <h1>Licenses</h1>
+  {% for l in licenses %}
+    <div>
+      <b>{{ l.student_id }}</b> - HWID: {{ l.hwid }} - Exp: {{ l.expiry }}
+      <form method="post" action="/admin/extend">
+        <input type="hidden" name="student_id" value="{{ l.student_id }}">
+        <input type="number" name="days" value="30">
+        <button type="submit">Extend</button>
+      </form>
+      <form method="post" action="/admin/revoke">
+        <input type="hidden" name="student_id" value="{{ l.student_id }}">
+        <button type="submit">Revoke</button>
+      </form>
+    </div>
+  {% endfor %}
+</body>
+</html>

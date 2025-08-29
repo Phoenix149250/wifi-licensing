@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head><title>Activation Request</title></head>
+<body>
+  <h1>Request Activation</h1>
+  <form method="post" action="{{ host }}/api/request-activation">
+    Student ID: <input type="text" name="student_id" required><br>
+    HWID: <input type="text" name="hwid" required><br>
+    Contact: <input type="text" name="contact"><br>
+    UPI Transaction: <input type="text" name="upi_txn"><br>
+    <button type="submit">Submit</button>
+  </form>
+</body>
+</html>
