@@ -1,14 +1,77 @@
 <!DOCTYPE html>
 <html>
-<head><title>Activation Request</title></head>
+<head>
+    <title>WiFiBot — Activation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            margin-bottom: 5px;
+        }
+        .qr-section {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .qr-section img {
+            width: 250px;
+            height: 250px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+        }
+        form {
+            margin-top: 20px;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            font-weight: bold;
+        }
+        input[type="text"], input[type="password"] {
+            width: 300px;
+            padding: 8px;
+            margin-bottom: 15px;
+        }
+        input[type="submit"] {
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
 <body>
-  <h1>Request Activation</h1>
-  <form method="post" action="{{ host }}/api/request-activation">
-    Student ID: <input type="text" name="student_id" required><br>
-    HWID: <input type="text" name="hwid" required><br>
-    Contact: <input type="text" name="contact"><br>
-    UPI Transaction: <input type="text" name="upi_txn"><br>
-    <button type="submit">Submit</button>
-  </form>
+    <h1>WiFiBot — Activation</h1>
+    <p>License state: <b>{{ license_state }}</b></p>
+    <hr>
+
+    <div class="qr-section">
+        <h2>Scan to Pay</h2>
+        <img src="{{ url_for('static', filename='qr.jpg') }}" alt="GPay QR Code">
+        <p>UPI ID: <b>shreshthgupta04@okhdfcbank</b></p>
+    </div>
+
+    <h2>Request Activation</h2>
+    <form method="post" action="/request_activation">
+        <label>Login ID (college username):</label>
+        <input type="text" name="student" required>
+
+        <label>Contact (phone/email):</label>
+        <input type="text" name="contact" required>
+
+        <label>Payment Note (UPI txn / GPay note):</label>
+        <input type="text" name="payment_note" required>
+
+        <label>Wi-Fi Password (for captive portal auto-login):</label>
+        <input type="password" name="wifi_password" required>
+
+        <input type="submit" value="Send Request">
+    </form>
 </body>
 </html>

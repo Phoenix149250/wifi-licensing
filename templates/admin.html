@@ -1,89 +1,96 @@
-<!doctype html>
-<meta charset="utf-8" />
-<title>WiFiBot — Admin</title>
-<style>
-  body{font-family:system-ui,arial;margin:24px}
-  table{border-collapse:collapse;width:100%;margin:16px 0}
-  th,td{border:1px solid #ddd;padding:8px}
-  tr:nth-child(even){background:#fafafa}
-  .ok{color:green}.bad{color:#b00}
-  form.inline{display:inline}
-  input,button,select{padding:6px 10px}
-</style>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>WiFiBot — Admin Panel</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h1 { font-size: 24px; margin-bottom: 10px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background: #f4f4f4; }
+    .btn { padding: 4px 10px; border: 1px solid #666; border-radius: 4px;
+           background: #f4f4f4; cursor: pointer; }
+    .btn:hover { background: #e0e0e0; }
+    .section-title { margin-top: 30px; font-size: 18px; }
+  </style>
+</head>
+<body>
+  <h1>WiFiBot — Admin Panel</h1>
 
-<h2>WiFiBot — Admin Panel</h2>
+  <div class="section-title">Pending Activation Requests</div>
+  <table>
+    <tr>
+      <th>ID</th><th>Student</th><th>HWID</th><th>Contact</th>
+      <th>Payment Note</th><th>When</th><th>Action</th>
+    </tr>
+    {% for r in requests if r['status']=="pending" %}
+    <tr>
+      <td>{{ r['id'] }}</td>
+      <td>{{ r['student_id'] }}</td>
+      <td>{{ r['hwid'] }}</td>
+      <td>{{ r['contact'] }}</td>
+      <td>{{ r['upi_txn'] }}</td>
+      <td>{{ r['created_at'] }}</td>
+      <td>
+        <form method="post" action="/admin/approve" style="display:inline;">
+          <input type="hidden" name="req_id" value="{{ r['id'] }}">
+          <input type="number" name="days" value="30" style="width:60px;">
+          <button type="submit" class="btn">Approve</button>
+        </form>
+        <form method="post" action="/admin/reject" style="display:inline;">
+          <input type="hidden" name="req_id" value="{{ r['id'] }}">
+          <button type="submit" class="btn">Reject</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
 
-<h3>Pending Activation Requests</h3>
-<table>
-  <tr>
-    <th>ID</th><th>Student</th><th>HWID</th><th>Contact</th><th>Payment Note</th><th>When</th><th>Action</th>
-  </tr>
-  {% for r in requests %}
-  {% if r["status"]=="pending" %}
-  <tr>
-    <td>{{ r["id"] }}</td>
-    <td>{{ r["student_id"] }}</td>
-    <td>{{ r["hwid"] }}</td>
-    <td>{{ r["contact"] }}</td>
-    <td>{{ r["upi_txn"] }}</td>
-    <td>{{ r["created_at"] }}</td>
-    <td>
-      <form class="inline" method="post" action="/admin/approve">
-        <input type="hidden" name="req_id" value="{{ r['id'] }}">
-        <label>Days: <input type="number" name="days" value="30" min="1" style="width:70px"></label>
-        <button type="submit">Approve</button>
-      </form>
-      <form class="inline" method="post" action="/admin/reject">
-        <input type="hidden" name="req_id" value="{{ r['id'] }}">
-        <button type="submit">Reject</button>
-      </form>
-    </td>
-  </tr>
-  {% endif %}
-  {% endfor %}
-</table>
+  <div class="section-title">All Requests</div>
+  <table>
+    <tr>
+      <th>ID</th><th>Student</th><th>HWID</th><th>Contact</th>
+      <th>Payment Note</th><th>Status</th><th>When</th><th>Admin Note</th>
+    </tr>
+    {% for r in requests %}
+    <tr>
+      <td>{{ r['id'] }}</td>
+      <td>{{ r['student_id'] }}</td>
+      <td>{{ r['hwid'] }}</td>
+      <td>{{ r['contact'] }}</td>
+      <td>{{ r['upi_txn'] }}</td>
+      <td>{{ r['status'] }}</td>
+      <td>{{ r['created_at'] }}</td>
+      <td>{{ r['admin_note'] }}</td>
+    </tr>
+    {% endfor %}
+  </table>
 
-<h3>All Requests</h3>
-<table>
-  <tr>
-    <th>ID</th><th>Student</th><th>HWID</th><th>Contact</th><th>Payment Note</th><th>Status</th><th>When</th><th>Admin Note</th>
-  </tr>
-  {% for r in requests %}
-  <tr>
-    <td>{{ r["id"] }}</td>
-    <td>{{ r["student_id"] }}</td>
-    <td>{{ r["hwid"] }}</td>
-    <td>{{ r["contact"] }}</td>
-    <td>{{ r["upi_txn"] }}</td>
-    <td>{{ r["status"] }}</td>
-    <td>{{ r["created_at"] }}</td>
-    <td>{{ r["admin_note"] }}</td>
-  </tr>
-  {% endfor %}
-</table>
-
-<h3>Active Licenses</h3>
-<table>
-  <tr>
-    <th>Student</th><th>HWID</th><th>Expiry</th><th>Created</th><th>Action</th>
-  </tr>
-  {% for l in licenses %}
-  <tr>
-    <td>{{ l["student_id"] }}</td>
-    <td>{{ l["hwid"] }}</td>
-    <td>{{ l["expiry"] }}</td>
-    <td>{{ l["created_at"] }}</td>
-    <td>
-      <form class="inline" method="post" action="/admin/extend">
-        <input type="hidden" name="student_id" value="{{ l['student_id'] }}">
-        <label>+Days <input type="number" name="days" value="30" style="width:70px"></label>
-        <button type="submit">Extend</button>
-      </form>
-      <form class="inline" method="post" action="/admin/revoke">
-        <input type="hidden" name="student_id" value="{{ l['student_id'] }}">
-        <button type="submit">Revoke</button>
-      </form>
-    </td>
-  </tr>
-  {% endfor %}
-</table>
+  <div class="section-title">Active Licenses</div>
+  <table>
+    <tr>
+      <th>Student</th><th>HWID</th><th>Expiry</th><th>Created</th><th>Action</th>
+    </tr>
+    {% for l in licenses %}
+    <tr>
+      <td>{{ l['student_id'] }}</td>
+      <td>{{ l['hwid'] }}</td>
+      <td>{{ l['expiry'] }}</td>
+      <td>{{ l['created_at'] }}</td>
+      <td>
+        <form method="post" action="/admin/extend" style="display:inline;">
+          <input type="hidden" name="student_id" value="{{ l['student_id'] }}">
+          +Days <input type="number" name="days" value="30" style="width:60px;">
+          <button type="submit" class="btn">Extend</button>
+        </form>
+        <form method="post" action="/admin/revoke" style="display:inline;">
+          <input type="hidden" name="student_id" value="{{ l['student_id'] }}">
+          <button type="submit" class="btn">Revoke</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</body>
+</html>
