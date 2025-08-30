@@ -58,18 +58,23 @@
     </div>
 
     <h2>Request Activation</h2>
-    <form method="post" action="/request_activation">
-        <label>Login ID (college username):</label>
-        <input type="text" name="student" required>
+    <form method="post" action="/request">
+        <label>Wifi Username :</label>
+        <input type="text" id="student_id" name="student_id" required>
 
-        <label>Contact (phone/email):</label>
-        <input type="text" name="contact" required>
+        <label>Wi-Fi Password :</label>
+        <input type="password" id="wifi_pass" name="wifi_pass" required>
+
+        <label>Payment Contact no.:</label>
+        <input type="text" id="contact" name="contact" required>
 
         <label>Payment Note (UPI txn / GPay note):</label>
-        <input type="text" name="payment_note" required>
+        <input type="text" id="upi_txn" name="upi_txn" required>
 
-        <label>Wi-Fi Password (for captive portal auto-login):</label>
-        <input type="password" name="wifi_password" required>
+        <label>Hardware ID (HWID):</label><br>
+        <input type="text" id="hwid" name="hwid" required><br><br>
+
+
 
         <input type="submit" value="Send Request">
     </form>

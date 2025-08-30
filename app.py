@@ -16,6 +16,7 @@ HOST_URL = os.getenv("RENDER_EXTERNAL_URL", "http://127.0.0.1:8000")
 DB_PATH = "db.sqlite"
 
 app = FastAPI(title="WiFiBot Licensing")
+
 # Mount the static folder
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
@@ -37,11 +38,18 @@ def db():
 def init_db():
     con = db(); cur = con.cursor()
     cur.execute("""
-    CREATE TABLE IF NOT EXISTS activation_requests(
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      student_id TEXT, hwid TEXT, contact TEXT, upi_txn TEXT,
-      status TEXT DEFAULT 'pending', admin_note TEXT, created_at TEXT
-    )""")
+CREATE TABLE IF NOT EXISTS activation_requests(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  student_id TEXT,
+  hwid TEXT,
+  contact TEXT,
+  upi_txn TEXT,
+  wifi_pass TEXT,
+  status TEXT DEFAULT 'pending',
+  admin_note TEXT,
+  created_at TEXT
+)""")
+
     cur.execute("""
     CREATE TABLE IF NOT EXISTS licenses(
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -53,6 +61,22 @@ init_db()
 # ---------------- Student JSON API ----------------
 @app.post("/api/request-activation")
 async def api_request_activation(
+    student_id: str = Form(...),
+    hwid: str = Form(...),
+    contact: str = Form(""),
+    upi_txn: str = Form("")
+):
+    con = db(); cur = con.cursor()
+    cur.execute(
+        "INSERT INTO activation_requests(student_id,hwid,contact,upi_txn,status,created_at) VALUES(?,?,?,?,?,?)",
+        (student_id, hwid, contact, upi_txn, "pending", datetime.now(timezone.utc).isoformat())
+    )
+    con.commit(); con.close()
+    return {"ok": True}
+
+# ✅ Compatibility endpoint for client (Flask portal.py expects this)
+@app.post("/request_activation")
+async def compat_request_activation(
     student_id: str = Form(...),
     hwid: str = Form(...),
     contact: str = Form(""),
@@ -98,16 +122,16 @@ async def submit_request(
     student_id: str = Form(...),
     hwid: str = Form(...),
     contact: str = Form(""),
-    upi_txn: str = Form("")
+    upi_txn: str = Form(""),
+    wifi_pass: str = Form(...)
 ):
     con = db(); cur = con.cursor()
     cur.execute(
-        "INSERT INTO activation_requests(student_id, hwid, contact, upi_txn, status, created_at) VALUES (?,?,?,?,?,?)",
-        (student_id, hwid, contact, upi_txn, "pending", datetime.now(timezone.utc).isoformat())
+        "INSERT INTO activation_requests(student_id, hwid, contact, upi_txn, wifi_pass, status, created_at) VALUES (?,?,?,?,?,?,?)",
+        (student_id, hwid, contact, upi_txn, wifi_pass, "pending", datetime.now(timezone.utc).isoformat())
     )
-    con.commit(); con.close()
 
-    # After submitting, reload the form with a success message
+    con.commit(); con.close()
     return templates.TemplateResponse(
         "request.html",
         {"request": request, "host": HOST_URL, "success": True}
