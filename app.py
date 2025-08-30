@@ -5,6 +5,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
+from fastapi.staticfiles import StaticFiles
 
 # Load .env values if available
 load_dotenv()
@@ -15,6 +16,9 @@ HOST_URL = os.getenv("RENDER_EXTERNAL_URL", "http://127.0.0.1:8000")
 DB_PATH = "db.sqlite"
 
 app = FastAPI(title="WiFiBot Licensing")
+# Mount the static folder
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 templates = Jinja2Templates(directory="templates")
 
 # CORS setup (allow API calls from anywhere)
