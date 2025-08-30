@@ -1,37 +1,89 @@
-<!DOCTYPE html>
-<html>
-<head><title>Admin Panel</title></head>
-<body>
-  <h1>Activation Requests</h1>
+<!doctype html>
+<meta charset="utf-8" />
+<title>WiFiBot — Admin</title>
+<style>
+  body{font-family:system-ui,arial;margin:24px}
+  table{border-collapse:collapse;width:100%;margin:16px 0}
+  th,td{border:1px solid #ddd;padding:8px}
+  tr:nth-child(even){background:#fafafa}
+  .ok{color:green}.bad{color:#b00}
+  form.inline{display:inline}
+  input,button,select{padding:6px 10px}
+</style>
+
+<h2>WiFiBot — Admin Panel</h2>
+
+<h3>Pending Activation Requests</h3>
+<table>
+  <tr>
+    <th>ID</th><th>Student</th><th>HWID</th><th>Contact</th><th>Payment Note</th><th>When</th><th>Action</th>
+  </tr>
   {% for r in requests %}
-    <div>
-      <b>{{ r.student_id }}</b> - {{ r.hwid }} - {{ r.status }}
-      <form method="post" action="/admin/approve">
-        <input type="hidden" name="req_id" value="{{ r.id }}">
-        <input type="number" name="days" value="30">
+  {% if r["status"]=="pending" %}
+  <tr>
+    <td>{{ r["id"] }}</td>
+    <td>{{ r["student_id"] }}</td>
+    <td>{{ r["hwid"] }}</td>
+    <td>{{ r["contact"] }}</td>
+    <td>{{ r["upi_txn"] }}</td>
+    <td>{{ r["created_at"] }}</td>
+    <td>
+      <form class="inline" method="post" action="/admin/approve">
+        <input type="hidden" name="req_id" value="{{ r['id'] }}">
+        <label>Days: <input type="number" name="days" value="30" min="1" style="width:70px"></label>
         <button type="submit">Approve</button>
       </form>
-      <form method="post" action="/admin/reject">
-        <input type="hidden" name="req_id" value="{{ r.id }}">
+      <form class="inline" method="post" action="/admin/reject">
+        <input type="hidden" name="req_id" value="{{ r['id'] }}">
         <button type="submit">Reject</button>
       </form>
-    </div>
+    </td>
+  </tr>
+  {% endif %}
   {% endfor %}
+</table>
 
-  <h1>Licenses</h1>
+<h3>All Requests</h3>
+<table>
+  <tr>
+    <th>ID</th><th>Student</th><th>HWID</th><th>Contact</th><th>Payment Note</th><th>Status</th><th>When</th><th>Admin Note</th>
+  </tr>
+  {% for r in requests %}
+  <tr>
+    <td>{{ r["id"] }}</td>
+    <td>{{ r["student_id"] }}</td>
+    <td>{{ r["hwid"] }}</td>
+    <td>{{ r["contact"] }}</td>
+    <td>{{ r["upi_txn"] }}</td>
+    <td>{{ r["status"] }}</td>
+    <td>{{ r["created_at"] }}</td>
+    <td>{{ r["admin_note"] }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+<h3>Active Licenses</h3>
+<table>
+  <tr>
+    <th>Student</th><th>HWID</th><th>Expiry</th><th>Created</th><th>Action</th>
+  </tr>
   {% for l in licenses %}
-    <div>
-      <b>{{ l.student_id }}</b> - HWID: {{ l.hwid }} - Exp: {{ l.expiry }}
-      <form method="post" action="/admin/extend">
-        <input type="hidden" name="student_id" value="{{ l.student_id }}">
-        <input type="number" name="days" value="30">
+  <tr>
+    <td>{{ l["student_id"] }}</td>
+    <td>{{ l["hwid"] }}</td>
+    <td>{{ l["expiry"] }}</td>
+    <td>{{ l["created_at"] }}</td>
+    <td>
+      <form class="inline" method="post" action="/admin/extend">
+        <input type="hidden" name="student_id" value="{{ l['student_id'] }}">
+        <label>+Days <input type="number" name="days" value="30" style="width:70px"></label>
         <button type="submit">Extend</button>
       </form>
-      <form method="post" action="/admin/revoke">
-        <input type="hidden" name="student_id" value="{{ l.student_id }}">
+      <form class="inline" method="post" action="/admin/revoke">
+        <input type="hidden" name="student_id" value="{{ l['student_id'] }}">
         <button type="submit">Revoke</button>
       </form>
-    </div>
+    </td>
+  </tr>
   {% endfor %}
-</body>
-</html>
+</table>
