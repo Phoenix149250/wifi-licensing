@@ -1,4 +1,4 @@
-import os, sqlite3, secrets
+import os, sqlite3
 from datetime import datetime, timedelta, timezone, date
 from fastapi import FastAPI, Request, Form, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
@@ -83,9 +83,31 @@ async def api_check(payload: dict):
     else:
         return {"ok": False, "state": "blocked", "expiry": row["expiry"]}
 
+# ---------------- Student Activation Form ----------------
 @app.get("/request", response_class=HTMLResponse)
 def request_form(request: Request):
     return templates.TemplateResponse("request.html", {"request": request, "host": HOST_URL})
+
+@app.post("/request", response_class=HTMLResponse)
+async def submit_request(
+    request: Request,
+    student_id: str = Form(...),
+    hwid: str = Form(...),
+    contact: str = Form(""),
+    upi_txn: str = Form("")
+):
+    con = db(); cur = con.cursor()
+    cur.execute(
+        "INSERT INTO activation_requests(student_id, hwid, contact, upi_txn, status, created_at) VALUES (?,?,?,?,?,?)",
+        (student_id, hwid, contact, upi_txn, "pending", datetime.now(timezone.utc).isoformat())
+    )
+    con.commit(); con.close()
+
+    # After submitting, reload the form with a success message
+    return templates.TemplateResponse(
+        "request.html",
+        {"request": request, "host": HOST_URL, "success": True}
+    )
 
 # ---------------- Admin Panel ----------------
 @app.get("/admin", response_class=HTMLResponse)
